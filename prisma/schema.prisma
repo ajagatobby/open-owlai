@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(uuid())
+  fullname       String?
+  avatarUrl      String?       @map("avatar_url")
+  username       String?       @unique
+  email          String        @unique
+  onboarded      Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  subscriptionId String?       @unique @db.Uuid
+  freeCredit     Int           @default(5)
+  Favorite       Favorite[]
+  Logo           Logo[]
+  subscription   Subscription? @relation("UserSubscription")
+}
+
+model Logo {
+  id        String     @id @default(cuid())
+  urls      String[]
+  userId    String
+  prompt    String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  public    Boolean    @default(false)
+  Favorite  Favorite[]
+  user      User       @relation(fields: [userId], references: [id])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  logoId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  logo      Logo     @relation(fields: [logoId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
+  plan        String
+  status      String
+  credits     Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String   @unique
+  usedCredits Int?
+  user        User     @relation("UserSubscription", fields: [userId], references: [id])
+}
